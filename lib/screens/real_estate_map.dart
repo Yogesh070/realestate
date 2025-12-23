@@ -4,6 +4,7 @@ import 'package:label_marker/label_marker.dart';
 import '../models/property.dart';
 import '../data/dummy_data.dart';
 import '../utils/marker_generator.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class RealEstateMap extends StatefulWidget {
   const RealEstateMap({super.key});
@@ -161,12 +162,17 @@ class PropertyDetailsSheet extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(20),
                 ),
-                child: Image.network(
-                  property.imageUrl,
+                child: CachedNetworkImage(
+                  imageUrl: property.imageUrl,
                   height: 200,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
+                  placeholder: (context, url) => Container(
+                    height: 200,
+                    color: Colors.grey[300],
+                    alignment: Alignment.center,
+                  ),
+                  errorWidget: (context, url, error) {
                     return Container(
                       height: 200,
                       color: Colors.grey[300],
