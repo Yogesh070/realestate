@@ -28,6 +28,10 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        // Read API key from dart-define and inject into manifest
+        val googleMapsApiKey = project.property("dart.env.GOOGLE_MAPS_API_KEY") ?: ""
+        manifestPlaceholders["googleMapsApiKey"] = googleMapsApiKey
     }
 
     buildTypes {

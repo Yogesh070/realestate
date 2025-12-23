@@ -1,16 +1,29 @@
 # realestate
 
-A new Flutter project.
+### Setup
 
-## Getting Started
+```bash
+# Copy the example file
+cp .env.example .env
+```
+Edit .env and replace YOUR_API_KEY_HERE with your actual Google Maps API key
 
-This project is a starting point for a Flutter application.
+#### Run the app
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+# Run the app (default device)
+rps
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+# Run on specific platform
+rps run:ios
+rps run:android
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Build for production
+rps build apk
+rps build ios
+rps build web
+```
+
+#### Utilities
+- `rps clean` - Clean build files and get dependencies
+- `rps ls` - List all available scripts
