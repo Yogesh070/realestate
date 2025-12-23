@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../models/property.dart';
 import '../data/dummy_data.dart';
+import '../utils/marker_generator.dart';
 
 class RealEstateMap extends StatefulWidget {
   const RealEstateMap({super.key});
@@ -12,6 +13,7 @@ class RealEstateMap extends StatefulWidget {
 
 class _RealEstateMapState extends State<RealEstateMap> {
   final Set<Marker> _markers = {};
+  bool _showImages = false;
 
   // Initial position focused on San Francisco
   static const CameraPosition _initialPosition = CameraPosition(
@@ -25,21 +27,51 @@ class _RealEstateMapState extends State<RealEstateMap> {
     _loadMarkers();
   }
 
-  void _loadMarkers() {
+  Future<void> _loadMarkers() async {
+    final Set<Marker> newMarkers = {};
     for (final property in dummyProperties) {
-      _markers.add(
+      final String shortPrice =
+          '${(property.price / 1000).toStringAsFixed(0)}k';
+
+      BitmapDescriptor icon;
+      if (_showImages) {
+        icon = await MarkerGenerator.createPriceImageMarker(
+          shortPrice,
+          property.imageUrl,
+        );
+      } else {
+        icon = await MarkerGenerator.createPriceMarker(shortPrice);
+      }
+
+      newMarkers.add(
         Marker(
           markerId: MarkerId(property.id),
           position: property.location,
-          infoWindow: InfoWindow(
-            title: property.name,
-            snippet: '\$${property.price.toStringAsFixed(0)}',
-          ),
+          icon: icon,
           onTap: () {
             _showPropertyDetails(property);
           },
         ),
       );
+    }
+
+    if (mounted) {
+      setState(() {
+        _markers.clear();
+        _markers.addAll(newMarkers);
+      });
+    }
+  }
+
+  void _onCameraMove(CameraPosition position) {
+    if (position.zoom >= 15 && !_showImages) {
+      // Switch to image markers
+      _showImages = true;
+      _loadMarkers();
+    } else if (position.zoom < 15 && _showImages) {
+      // Switch to simple price markers
+      _showImages = false;
+      _loadMarkers();
     }
   }
 
@@ -62,9 +94,7 @@ class _RealEstateMapState extends State<RealEstateMap> {
       body: GoogleMap(
         initialCameraPosition: _initialPosition,
         markers: _markers,
-        onMapCreated: (controller) {
-          // _mapController = controller; // Removed as _mapController is no longer used
-        },
+        onCameraMove: _onCameraMove,
         myLocationEnabled: true,
         myLocationButtonEnabled: true,
       ),
