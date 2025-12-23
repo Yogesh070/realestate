@@ -15,10 +15,10 @@ class _RealEstateMapState extends State<RealEstateMap> {
   final Set<Marker> _markers = {};
   bool _showImages = false;
 
-  // Initial position focused on San Francisco
+  // Initial position focused on Pokhara, Nepal
   static const CameraPosition _initialPosition = CameraPosition(
-    target: LatLng(37.7749, -122.4194),
-    zoom: 12,
+    target: LatLng(28.2095, 83.9585),
+    zoom: 13,
   );
 
   @override
