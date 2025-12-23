@@ -5,7 +5,7 @@
         android:icon="@mipmap/ic_launcher">
         <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
         <meta-data android:name="com.google.android.geo.API_KEY"
-               android:value="AIzaSyAf0nzD0rFctYYvk88e2p3OTpBPboB4_lo"/>
+               android:value="${googleMapsApiKey}"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

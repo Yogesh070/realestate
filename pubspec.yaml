@@ -90,3 +90,63 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Run Pubspec Scripts (rps) - https://pub.dev/packages/rps
+# Usage: rps <script_name>
+# These scripts call the shell scripts in /scripts for single source of truth
+scripts:
+  # Default dev run - loads API key from .env
+  # Usage: rps run OR just: rps
+  run:
+    $script:
+      $default: ./scripts/run_dev.sh
+      $windows: scripts\run_dev.sh
+  
+  # Build commands
+  build:
+    # Build Android APK
+    # Usage: rps build apk
+    apk:
+      $before: echo "Building Android APK..."
+      $script:
+        $default: ./scripts/build.sh apk
+        $windows: scripts\build.sh apk
+      $after: echo "✓ Build complete"
+    
+    # Build Android App Bundle
+    # Usage: rps build appbundle
+    appbundle:
+      $before: echo "Building Android App Bundle..."
+      $script:
+        $default: ./scripts/build.sh appbundle
+        $windows: scripts\build.sh appbundle
+      $after: echo "✓ Build complete"
+    
+    # Build iOS
+    # Usage: rps build ios
+    ios:
+      $before: echo "Building iOS..."
+      $script:
+        $default: ./scripts/build.sh ios
+        $windows: scripts\build.sh ios
+      $after: echo "✓ Build complete"
+    
+    # Build Web
+    # Usage: rps build web
+    web:
+      $before: echo "Building Web..."
+      $script:
+        $default: ./scripts/build_web.sh
+        $windows: scripts\build_web.sh
+      $after: echo "✓ Build complete"
+  
+  # Clean and get dependencies
+  # Usage: rps clean
+  clean:
+    $script:
+      $default: |
+        flutter clean
+        flutter pub get
+      $windows: |
+        flutter clean
+        flutter pub get
