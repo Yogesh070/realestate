@@ -5,6 +5,7 @@ import '../models/property.dart';
 import '../data/dummy_data.dart';
 import '../utils/marker_generator.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'filter_screen.dart';
 
 class RealEstateMap extends StatefulWidget {
   const RealEstateMap({super.key});
@@ -16,6 +17,12 @@ class RealEstateMap extends StatefulWidget {
 class _RealEstateMapState extends State<RealEstateMap> {
   final Set<Marker> _markers = {};
   bool _showImages = false;
+  late RangeValues _priceRange;
+  late double _minPrice;
+  late double _maxPrice;
+  late RangeValues _areaRange;
+  late double _minArea;
+  late double _maxArea;
 
   // Initial position focused on Pokhara, Nepal
   static const CameraPosition _initialPosition = CameraPosition(
@@ -26,6 +33,26 @@ class _RealEstateMapState extends State<RealEstateMap> {
   @override
   void initState() {
     super.initState();
+    // Calculate min and max pricesand area from data
+    double minP = double.infinity;
+    double maxP = double.negativeInfinity;
+    double minA = double.infinity;
+    double maxA = double.negativeInfinity;
+
+    for (var p in dummyProperties) {
+      if (p.price < minP) minP = p.price;
+      if (p.price > maxP) maxP = p.price;
+      if (p.area < minA) minA = p.area;
+      if (p.area > maxA) maxA = p.area;
+    }
+    _minPrice = minP;
+    _maxPrice = maxP;
+    _priceRange = RangeValues(_minPrice, _maxPrice);
+
+    _minArea = minA;
+    _maxArea = maxA;
+    _areaRange = RangeValues(_minArea, _maxArea);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadMarkers();
     });
@@ -40,6 +67,14 @@ class _RealEstateMapState extends State<RealEstateMap> {
     final List<Future<void>> loadingTasks = [];
 
     for (final property in dummyProperties) {
+      if (property.price < _priceRange.start ||
+          property.price > _priceRange.end) {
+        continue;
+      }
+      if (property.area < _areaRange.start || property.area > _areaRange.end) {
+        continue;
+      }
+
       final String shortPrice =
           '${(property.price / 1000).toStringAsFixed(0)}k';
 
@@ -128,12 +163,86 @@ class _RealEstateMapState extends State<RealEstateMap> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GoogleMap(
-        initialCameraPosition: _initialPosition,
-        markers: _markers,
-        onCameraMove: _onCameraMove,
-        myLocationEnabled: true,
-        myLocationButtonEnabled: true,
+      body: Stack(
+        children: [
+          GoogleMap(
+            initialCameraPosition: _initialPosition,
+            markers: _markers,
+            onCameraMove: _onCameraMove,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: true,
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            right: 16,
+            child: FloatingActionButton(
+              backgroundColor: Theme.of(context).primaryColor,
+              child: const Icon(Icons.filter_list, color: Colors.white),
+              onPressed: () async {
+                final result = await Navigator.push<FilterScreenResult>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FilterScreen(
+                      currentPriceRange: _priceRange,
+                      minPrice: _minPrice,
+                      maxPrice: _maxPrice,
+                      currentAreaRange: _areaRange,
+                      minArea: _minArea,
+                      maxArea: _maxArea,
+                    ),
+                  ),
+                );
+
+                if (result != null) {
+                  setState(() {
+                    _priceRange = result.priceRange;
+                    _areaRange = result.areaRange;
+                  });
+                  _loadMarkers();
+                }
+              },
+            ),
+          ),
+          // Price Filter Chip
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            left: 16,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_priceRange.start > _minPrice ||
+                    _priceRange.end < _maxPrice) ...[
+                  Chip(
+                    label: Text(
+                      '\$${(_priceRange.start / 1000).toStringAsFixed(0)}k - \$${(_priceRange.end / 1000).toStringAsFixed(0)}k',
+                    ),
+                    backgroundColor: Colors.white,
+                    onDeleted: () {
+                      setState(() {
+                        _priceRange = RangeValues(_minPrice, _maxPrice);
+                      });
+                      _loadMarkers();
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                if (_areaRange.start > _minArea || _areaRange.end < _maxArea)
+                  Chip(
+                    label: Text(
+                      '${_areaRange.start.toStringAsFixed(0)} - ${_areaRange.end.toStringAsFixed(0)} sq ft',
+                    ),
+                    backgroundColor: Colors.white,
+                    onDeleted: () {
+                      setState(() {
+                        _areaRange = RangeValues(_minArea, _maxArea);
+                      });
+                      _loadMarkers();
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
