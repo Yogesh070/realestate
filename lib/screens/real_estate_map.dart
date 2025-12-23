@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:label_marker/label_marker.dart';
 import '../models/property.dart';
 import '../data/dummy_data.dart';
 import '../utils/marker_generator.dart';
@@ -24,53 +25,88 @@ class _RealEstateMapState extends State<RealEstateMap> {
   @override
   void initState() {
     super.initState();
-    _loadMarkers();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadMarkers();
+    });
   }
 
   Future<void> _loadMarkers() async {
-    final Set<Marker> newMarkers = {};
+    if (!mounted) return;
+    final Color primaryColor = Theme.of(context).primaryColor;
+
+    // Create a temporary set to avoid flickering (Double Buffering)
+    final Set<Marker> tempMarkers = {};
+    final List<Future<void>> loadingTasks = [];
+
     for (final property in dummyProperties) {
       final String shortPrice =
           '${(property.price / 1000).toStringAsFixed(0)}k';
 
-      BitmapDescriptor icon;
+      // 1. Add Image Marker (Standard Google Maps Marker) - Only if zoomed in
       if (_showImages) {
-        icon = await MarkerGenerator.createPriceImageMarker(
-          shortPrice,
-          property.imageUrl,
+        loadingTasks.add(
+          MarkerGenerator.createCircularImageMarker(property.imageUrl)
+              .then((icon) {
+                tempMarkers.add(
+                  Marker(
+                    markerId: MarkerId('${property.id}_image'),
+                    position: property.location,
+                    icon: icon,
+                    // Anchor at (0.5, 1.5) to bring image closer to the label.
+                    // 1.0 is bottom-aligned. 1.5 shifts it up slightly to sit just above the label.
+                    anchor: const Offset(0.5, 1.5),
+                    zIndexInt: 2, // Ensure image is above label
+                    onTap: () {
+                      _showPropertyDetails(property);
+                    },
+                  ),
+                );
+              })
+              .catchError((e) {
+                debugPrint('Error loading image marker: $e');
+              }),
         );
-      } else {
-        icon = await MarkerGenerator.createPriceMarker(shortPrice);
       }
 
-      newMarkers.add(
-        Marker(
-          markerId: MarkerId(property.id),
-          position: property.location,
-          icon: icon,
-          onTap: () {
-            _showPropertyDetails(property);
-          },
+      loadingTasks.add(
+        tempMarkers.addLabelMarker(
+          LabelMarker(
+            label: shortPrice,
+            markerId: MarkerId(property.id),
+            position: property.location,
+            backgroundColor: primaryColor,
+            textStyle: const TextStyle(
+              fontSize: 40.0,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            onTap: () {
+              _showPropertyDetails(property);
+            },
+          ),
         ),
       );
     }
 
+    await Future.wait(loadingTasks);
     if (mounted) {
       setState(() {
         _markers.clear();
-        _markers.addAll(newMarkers);
+        _markers.addAll(tempMarkers);
       });
     }
   }
 
   void _onCameraMove(CameraPosition position) {
     if (position.zoom >= 15 && !_showImages) {
-      // Switch to image markers
-      _showImages = true;
+      setState(() {
+        _showImages = true;
+      });
       _loadMarkers();
     } else if (position.zoom < 15 && _showImages) {
-      // Switch to simple price markers
-      _showImages = false;
+      setState(() {
+        _showImages = false;
+      });
       _loadMarkers();
     }
   }
