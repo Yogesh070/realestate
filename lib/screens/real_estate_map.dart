@@ -147,117 +147,126 @@ class PropertyDetailsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.4,
+      initialChildSize: 0.6,
       minChildSize: 0.2,
       maxChildSize: 0.8,
       expand: false,
       builder: (context, scrollController) {
-        return SingleChildScrollView(
-          controller: scrollController,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Property Image
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
-                child: CachedNetworkImage(
-                  imageUrl: property.imageUrl,
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    height: 200,
-                    color: Colors.grey[300],
-                    alignment: Alignment.center,
-                  ),
-                  errorWidget: (context, url, error) {
-                    return Container(
-                      height: 200,
-                      color: Colors.grey[300],
-                      alignment: Alignment.center,
-                      child: const Icon(Icons.broken_image, size: 50),
-                    );
-                  },
-                ),
+        return _PropertyDetailsContent(
+          property: property,
+          scrollController: scrollController,
+        );
+      },
+    );
+  }
+}
+
+class _PropertyDetailsContent extends StatelessWidget {
+  final Property property;
+  final ScrollController scrollController;
+
+  const _PropertyDetailsContent({
+    required this.property,
+    required this.scrollController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      controller: scrollController,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Property Image
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            child: CachedNetworkImage(
+              imageUrl: property.imageUrl,
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                height: 200,
+                color: Colors.grey[300],
+                alignment: Alignment.center,
               ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              errorWidget: (context, url, error) {
+                return Container(
+                  height: 200,
+                  color: Colors.grey[300],
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.broken_image, size: 50),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            property.name,
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Text(
-                          '\$${property.price.toStringAsFixed(0)}',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: Theme.of(context).primaryColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.square_foot,
-                          size: 20,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${property.area.toStringAsFixed(0)} sq ft',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Description',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        property.name,
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
-                    const SizedBox(height: 8),
                     Text(
-                      property.description,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Placeholder for contact functionality
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Contact feature not implemented yet',
-                              ),
-                            ),
-                          );
-                        },
-                        child: const Text('Contact Agent'),
+                      '\$${property.price.toStringAsFixed(0)}',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.square_foot, size: 20, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${property.area.toStringAsFixed(0)} sq ft',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Description',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  property.description,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Placeholder for contact functionality
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Contact feature not implemented yet'),
+                        ),
+                      );
+                    },
+                    child: const Text('Contact Agent'),
+                  ),
+                ),
+              ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
